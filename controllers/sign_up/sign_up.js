@@ -1,6 +1,82 @@
+require('dotenv').config()
+const bcrypt = require('bcryptjs');
+const Joi = require('joi');
+const jwt = require("jsonwebtoken");
 
-function sign_up(req,res){
-    res.send("Sign up");
+const { connect_db } = require('../../database/db');
+const User = require('../../models/user');
+const OTP = require('../../models/OTP');
+const { email_confirm } = require('../../services/email_confirm');
+
+async function sign_up(req, res) {
+
+    const schema = Joi.object({
+        name: Joi.string().min(3).required(),
+        surname: Joi.string().min(3).required(),
+        email: Joi.string().email().required(),
+        password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
+        repeat_password: Joi.ref('password'),
+    })
+
+    const result = schema.validate(req.body);
+    if (result.error) {
+        res.status(400).send({
+            "status": false,
+            "message": result.error.details[0].message
+        });
+
+    } else {
+        connect_db(process.env.MONGO_URI);
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        const newUser = new User({
+            name: req.body.name,
+            surname: req.body.surname,
+            email: req.body.email,
+            password: bcrypt.hashSync(req.body.password, 10),
+            code: code,
+            created_at: new Date(),
+
+        });
+        const newOTP = new OTP({
+            email: req.body.email,
+            code: code,
+            created_at: new Date(),
+        });
+
+        await newUser
+            .save()
+        await newOTP
+            .save()
+
+            .then(() => {
+                email_confirm(process.env.EMAIL, process.env.PASSWORD, req.body.email, req.body.name, code);
+
+                const token = jwt.sign({
+                    email: req.body.email,
+                    name: req.body.name,
+                    surname: req.body.surname,
+                }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+
+                res.status(200).send({
+                    "status": true,
+                    "token": token,
+                    "expiresIn": 3600,
+                });
+            })
+            .catch((err) => {
+                console.log(new Date())
+                res.status(400).send({
+                    "status": false,
+                    "message": err.message
+                });
+            }
+            );
+    }
+
+
+    res.end();
+
 }
 
 module.exports = { sign_up };
