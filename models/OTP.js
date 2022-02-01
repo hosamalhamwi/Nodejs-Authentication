@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const OTPSchema = new Schema({
     email: String,
     code: Number,
+    token: String,
     created_at: Date,
 });
 

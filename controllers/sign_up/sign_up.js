@@ -9,7 +9,9 @@ const OTP = require('../../models/OTP');
 const { email_confirm } = require('../../services/email_confirm');
 
 async function sign_up(req, res) {
+    
 
+    // validate the body of the request
     const schema = Joi.object({
         name: Joi.string().min(3).required(),
         surname: Joi.string().min(3).required(),
@@ -25,9 +27,14 @@ async function sign_up(req, res) {
             "message": result.error.details[0].message
         });
 
-    } else {
+    } else { // if the request is valid
         connect_db(process.env.MONGO_URI);
         const code = Math.floor(100000 + Math.random() * 900000);
+        const token = jwt.sign({
+            email: req.body.email,
+            name: req.body.name,
+            surname: req.body.surname,
+        }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
 
         const newUser = new User({
             name: req.body.name,
@@ -35,12 +42,14 @@ async function sign_up(req, res) {
             email: req.body.email,
             password: bcrypt.hashSync(req.body.password, 10),
             code: code,
+            status : 0, //0 for unverified, 1 for verified
             created_at: new Date(),
 
         });
         const newOTP = new OTP({
             email: req.body.email,
             code: code,
+            token: token,
             created_at: new Date(),
         });
 
@@ -49,14 +58,10 @@ async function sign_up(req, res) {
         await newOTP
             .save()
 
-            .then(() => {
+            .then(() => { // if the user is saved successfully send email confirmation code
                 email_confirm(process.env.EMAIL, process.env.PASSWORD, req.body.email, req.body.name, code);
 
-                const token = jwt.sign({
-                    email: req.body.email,
-                    name: req.body.name,
-                    surname: req.body.surname,
-                }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+
 
                 res.status(200).send({
                     "status": true,
@@ -65,7 +70,7 @@ async function sign_up(req, res) {
                 });
             })
             .catch((err) => {
-                console.log(new Date())
+                
                 res.status(400).send({
                     "status": false,
                     "message": err.message
