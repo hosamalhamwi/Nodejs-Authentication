@@ -1,24 +1,22 @@
-require('dotenv').config()
+const Joi = require("joi");
+const bcrypt = require('bcryptjs');
 
-const Joi = require('joi');
-const { connect_db } = require('../../database/db');
-const OTP = require('../../models/OTP');
-const User = require('../../models/user');
+const { connect_db } = require("../../database/db");
+const Reset_token = require("../../models/reset_token");
+const User = require("../../models/user");
 
-
-async function email_verification(req, res) {
+async function new_password(req, res) {
     req.headers = {
 
         'Authorization': req.headers.authorization
     }
 
-    // validate the body of the request
     const schema = Joi.object({
-        code: Joi.number().min(2).required()
+        password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+        repeat_password: Joi.ref('password'),
     })
 
     const result = schema.validate(req.body);
-
 
     if (req.headers.Authorization == undefined) {
         res.status(403).send({
@@ -31,58 +29,53 @@ async function email_verification(req, res) {
             "status": false,
             "message": result.error.details[0].message
         })
-        
-    } else { // if the request is valid
 
+    } else {
         connect_db(process.env.MONGO_URI);
 
-        OTP.findOne({
+        Reset_token.findOne({
             token: (req.headers.Authorization).replace('Bearer ', '')
         })
             .then(async (result) => {
 
-                if (result.code == req.body.code) {
-                    await OTP.deleteOne({
-                        token: (req.headers.Authorization).replace('Bearer ', '')
-                    })
+                if (result.token == (req.headers.Authorization).replace('Bearer ', '')) {
 
-                    //update the user status to 1 (verified)
                     await User.updateOne({
                         email: result.email
                     }, {
-                        status: 1
+                        password: bcrypt.hashSync(req.body.password, 10)
                     })
+
                         .then(() => {
                             res.status(200).send({
                                 "status": true,
-                                "message": "Email verified"
+                                "message": "Password updated"
                             })
                         })
 
+                    res.end();
 
-                } else if (result.code != req.body.code) {
+                } else {
 
-                    res.status(400).send({
+                    res.status(403).send({
                         "status": false,
-                        "message": "Code is not correct"
+                        "message": "Unathorized"
                     })
                 }
-                
-                res.end();
+
+
 
             }
             ).catch(err => {
                 console.log(err);
-                res.status(401).send({
+                res.status(500).send({
                     "status": false,
-                    "message": "Unathorized"
+                    "message": "Internal Server Error"
                 });
             }
             );
 
     }
-
 }
 
-
-module.exports = { email_verification };
+module.exports = { new_password };

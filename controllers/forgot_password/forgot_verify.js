@@ -1,12 +1,13 @@
 require('dotenv').config()
+const Joi = require("joi");
+const jwt = require("jsonwebtoken");
 
-const Joi = require('joi');
-const { connect_db } = require('../../database/db');
-const OTP = require('../../models/OTP');
-const User = require('../../models/user');
+const { connect_db } = require("../../database/db");
+const Reset_OTP = require("../../models/reset_OTP");
+const Reset_token = require('../../models/reset_token');
 
 
-async function email_verification(req, res) {
+async function forgot_verify(req, res) {
     req.headers = {
 
         'Authorization': req.headers.authorization
@@ -31,33 +32,41 @@ async function email_verification(req, res) {
             "status": false,
             "message": result.error.details[0].message
         })
-        
+
     } else { // if the request is valid
 
         connect_db(process.env.MONGO_URI);
 
-        OTP.findOne({
+        Reset_OTP.findOne({
             token: (req.headers.Authorization).replace('Bearer ', '')
         })
             .then(async (result) => {
 
                 if (result.code == req.body.code) {
-                    await OTP.deleteOne({
+
+                    const token = jwt.sign({
+                        email: result.email,
+                        prev_token: req.headers.Authorization,
+
+                    }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+
+                    res.status(200).send({
+                        "status": true,
+                        "message": "Status verified",
+                        "token": token
+                    })
+
+                    await Reset_OTP.deleteOne({
                         token: (req.headers.Authorization).replace('Bearer ', '')
                     })
 
-                    //update the user status to 1 (verified)
-                    await User.updateOne({
-                        email: result.email
-                    }, {
-                        status: 1
+                    const new_token = new Reset_token({
+                        email: result.email,
+                        token: token
                     })
-                        .then(() => {
-                            res.status(200).send({
-                                "status": true,
-                                "message": "Email verified"
-                            })
-                        })
+
+                    new_token.save()
+
 
 
                 } else if (result.code != req.body.code) {
@@ -67,7 +76,7 @@ async function email_verification(req, res) {
                         "message": "Code is not correct"
                     })
                 }
-                
+
                 res.end();
 
             }
@@ -84,5 +93,4 @@ async function email_verification(req, res) {
 
 }
 
-
-module.exports = { email_verification };
+module.exports = { forgot_verify };

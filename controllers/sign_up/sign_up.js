@@ -68,6 +68,7 @@ async function sign_up(req, res) {
                     "token": token,
                     "expiresIn": 3600,
                 });
+                
             })
             .catch((err) => {
                 
