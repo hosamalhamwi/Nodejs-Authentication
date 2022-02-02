@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express');
+
 const { sign_up } = require('./controllers/sign_up/sign_up');
 const { email_verification } = require('./controllers/email_verification/email_verification');
 const { sign_in } = require('./controllers/sign_in/sign_in');
@@ -17,6 +18,7 @@ app.post('/login', sign_in);
 app.post('/forgot_password', forgot_password);
 app.post('/forgot_verify', forgot_verify)
 app.post('/new_password', new_password)
+
 
 
 

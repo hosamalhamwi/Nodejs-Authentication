@@ -2,13 +2,21 @@ require('dotenv').config()
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
 const jwt = require("jsonwebtoken");
+var parser = require('ua-parser-js');
 
 const { connect_db } = require('../../database/db');
 const User = require('../../models/user');
 const OTP = require('../../models/OTP');
 const { email_confirm } = require('../../services/email_confirm');
 
+
+
+
 async function sign_up(req, res) {
+
+    
+
+    var ua = parser(req.headers['user-agent']);
     
 
     // validate the body of the request
@@ -42,8 +50,19 @@ async function sign_up(req, res) {
             email: req.body.email,
             password: bcrypt.hashSync(req.body.password, 10),
             code: code,
-            status : 0, //0 for unverified, 1 for verified
+            status: 0, //0 for unverified, 1 for verified
             created_at: new Date(),
+            browser: {
+                name: ua.browser.name,
+                version: ua.browser.version,
+            },
+            os: {
+                name: ua.os.name,
+                version: ua.os.version,
+            },
+            device: {
+                architecture: ua.device.architecture,
+            }
 
         });
         const newOTP = new OTP({
@@ -53,36 +72,29 @@ async function sign_up(req, res) {
             created_at: new Date(),
         });
 
-        await newUser
-            .save()
-        await newOTP
-            .save()
-
-            .then(() => { // if the user is saved successfully send email confirmation code
-                email_confirm(process.env.EMAIL, process.env.PASSWORD, req.body.email, req.body.name, code);
-
-
-
-                res.status(200).send({
-                    "status": true,
-                    "token": token,
-                    "expiresIn": 3600,
-                });
-                
-            })
-            .catch((err) => {
-                
+        await User.findOne({
+            email: req.body.email
+        }).then(async (result) => {
+            if (result) {
                 res.status(400).send({
                     "status": false,
-                    "message": err.message
+                    "message": "User already exists"
                 });
+            } else {
+
+                await newUser.save().then(async (result) => {
+                    await newOTP.save().then(async (result) => {
+                        await email_confirm(process.env.EMAIL, process.env.PASSWORD, req.body.email, req.body.name, code);
+                        res.status(200).send({
+                            "status": true,
+                            "token": token,
+                            "expires_in": 3600
+                        });
+                    })
+                })
             }
-            );
+        })
     }
-
-
-    res.end();
-
 }
 
 module.exports = { sign_up };

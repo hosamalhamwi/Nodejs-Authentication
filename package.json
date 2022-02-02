@@ -19,6 +19,7 @@
     "mongodb": "^4.3.1",
     "mongoose": "^6.1.9",
     "nodemailer": "^6.7.2",
-    "npm": "^8.4.0"
+    "npm": "^8.4.0",
+    "ua-parser-js": "^1.0.2"
   }
 }

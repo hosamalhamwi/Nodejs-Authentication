@@ -53,7 +53,12 @@ async function new_password(req, res) {
                             })
                         })
 
-                    res.end();
+                    await Reset_token.deleteOne({
+                        token: (req.headers.Authorization).replace('Bearer ', '')
+                    }).then(() => {
+                        
+                        res.end();
+                    })
 
                 } else {
 
