@@ -26,4 +26,20 @@ Start the server
 node server.js
 ```
 
+## .ENV 
+setup environment variable file before running the server
+```
+API_PORT=3000
+
+MONGO_URI=""
+
+TOKEN_SECRET=""
+
+// for email service (Sender Credentials)
+
+EMAIL=""  
+
+PASSWORD=""
+```
+
 
