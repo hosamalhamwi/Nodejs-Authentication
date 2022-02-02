@@ -2,7 +2,9 @@ require('dotenv').config()
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
 const jwt = require("jsonwebtoken");
-var parser = require('ua-parser-js');
+const Speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
+const parser = require('ua-parser-js');
 
 const { connect_db } = require('../../database/db');
 const User = require('../../models/user');
@@ -14,10 +16,10 @@ const { email_confirm } = require('../../services/email_confirm');
 
 async function sign_up(req, res) {
 
-    
 
-    var ua = parser(req.headers['user-agent']);
-    
+
+    const ua = parser(req.headers['user-agent']);
+
 
     // validate the body of the request
     const schema = Joi.object({
@@ -37,12 +39,27 @@ async function sign_up(req, res) {
 
     } else { // if the request is valid
         connect_db(process.env.MONGO_URI);
+
+        // OTP code
         const code = Math.floor(100000 + Math.random() * 900000);
+
+        // JWT token
         const token = jwt.sign({
             email: req.body.email,
             name: req.body.name,
             surname: req.body.surname,
         }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+
+        // Google Authenticator
+
+        var secret = Speakeasy.generateSecret({
+            name: 'NodeJS-Authentication',
+
+        });
+
+        // QRCode.toFileStream(res, secret.otpauth_url);
+
+        // User Schema
 
         const newUser = new User({
             name: req.body.name,
@@ -52,6 +69,11 @@ async function sign_up(req, res) {
             code: code,
             status: 0, //0 for unverified, 1 for verified
             created_at: new Date(),
+            //  Google Authenticator
+            google_auth: {
+                secret: secret.base32,
+                otpauth_url: secret.otpauth_url, //QRCode URi
+            },
             browser: {
                 name: ua.browser.name,
                 version: ua.browser.version,
@@ -87,6 +109,10 @@ async function sign_up(req, res) {
                         await email_confirm(process.env.EMAIL, process.env.PASSWORD, req.body.email, req.body.name, code);
                         res.status(200).send({
                             "status": true,
+                            "google_auth": {
+                                secret: secret.base32,
+                                otpauth_url: secret.otpauth_url, //QRCode URi
+                            },
                             "token": token,
                             "expires_in": 3600
                         });

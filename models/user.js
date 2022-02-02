@@ -9,6 +9,11 @@ const UserSchema = new Schema({
     code: Number,
     status: Boolean,
     created_at: Date,
+    //  Google Authenticator
+    google_auth : {
+        secret: String,
+        otpauth_url: String,
+    },
     // store object with user's browser info
     browser: {
         name: String,
