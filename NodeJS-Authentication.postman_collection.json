@@ -1,0 +1,146 @@
+{
+	"info": {
+		"_postman_id": "fb0b11a0-5faa-4dcb-8f65-fe619b3938d4",
+		"name": "NodeJS-Authentication",
+		"description": "# Introduction\nWhat does your API do?\n\n# Overview\nThings that the developers should know about\n\n# Authentication\nWhat is the preferred way of using the API?\n\n# Error Codes\nWhat errors and status codes can a user expect?\n\n# Rate limit\nIs there a limit to the number of requests a user can send?",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "sign_up",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\" : \"Muhammad\",\n    \"surname\" : \"Qazi\",\n    \"email\" : \"princemuhammad777@gmail.com\",\n    \"password\" : \"012345\",\n    \"repeat_password\" : \"012345\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/register",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sign_in",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "email_verification",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InByaW5jZW11aGFtbWFkNzc3QGdtYWlsLmNvbSIsIm5hbWUiOiJNdWhhbW1hZCIsInN1cm5hbWUiOiJRYXppIiwiaWF0IjoxNjQzNzI2OTI2LCJleHAiOjE2NDM3MzA1MjZ9.Gw0HXz26hMqxv2SW3v-P2PczxrLmoNUz4TmmdkNZoCI",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\" : \"princemuhammad777@gmail.com\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/email_verification",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"email_verification"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "forgot_password",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "forgot_verify",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "new_password",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "google_auth",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\" : \"princemuhammad777@gmail.com\",\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/google_auth",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"google_auth"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "google_verify",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		}
+	]
+}
