@@ -26,6 +26,12 @@ Start the server
 node server.js
 ```
 
+and
+
+```
+nodemon server.js
+```
+
 ## .ENV 
 setup environment variable file before running the server
 ```
